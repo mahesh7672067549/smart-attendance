@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Register Student</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">&larr; Back</a>
+    <h1>Register Student</h1>
+
+    <div class="form-row">
+      <input type="text" id="student_id" placeholder="Roll Number (e.g. 21MIS7131)">
+      <input type="text" id="full_name" placeholder="Full Name">
+    </div>
+
+    <div class="video-wrap">
+      <video id="video" autoplay playsinline></video>
+      <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+    </div>
+
+    <button id="captureBtn">Capture &amp; Register</button>
+    <div id="loader" class="loader" style="display:none;">Processing...</div>
+    <div id="message" class="message"></div>
+  </div>
+
+  <script src="/static/script.js"></script>
+  <script>
+    startCamera();
+
+    document.getElementById('captureBtn').addEventListener('click', () => {
+      const studentId = document.getElementById('student_id').value.trim();
+      const fullName = document.getElementById('full_name').value.trim();
+      const messageEl = document.getElementById('message');
+
+      if (!studentId || !fullName) {
+        messageEl.textContent = 'Please enter both Roll Number and Name.';
+        messageEl.className = 'message error';
+        return;
+      }
+
+      const imageData = captureFrame();
+      showLoader(true);
+
+      fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student_id: studentId,
+          name: fullName,
+          image: imageData
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        showLoader(false);
+        messageEl.textContent = data.message;
+        messageEl.className = data.success ? 'message success' : 'message error';
+      })
+      .catch(err => {
+        showLoader(false);
+        messageEl.textContent = 'Error: ' + err;
+        messageEl.className = 'message error';
+      });
+    });
+  </script>
+</body>
+</html>

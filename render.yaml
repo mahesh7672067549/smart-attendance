@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: attendance-engine
+    env: python
+    plan: free
+    buildCommand: "cd attendance-engine && pip install -r requirements.txt"
+    startCommand: "cd attendance-engine && python app.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000

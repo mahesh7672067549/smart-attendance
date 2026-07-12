@@ -1,0 +1,9 @@
+session_id,class_name,faculty_id,timestamp,student_id,name,status
+22,c,1,2026-07-12 21:11:57,13,lokesh,Present
+22,c,1,2026-07-12 21:11:57,1,m,Present
+22,c,1,2026-07-12 21:11:57,9,n,Absent
+22,c,1,2026-07-12 21:11:57,2,naveen,Absent
+22,c,1,2026-07-12 21:11:57,7,Cherry,Absent
+22,c,1,2026-07-12 21:11:57,5,Sudarshan,Absent
+22,c,1,2026-07-12 21:11:57,6,harika,Absent
+22,c,1,2026-07-12 21:11:57,4,tarun,Absent

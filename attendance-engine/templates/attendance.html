@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Take Attendance</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">&larr; Back</a>
+    <h1>Take Attendance</h1>
+
+    <div class="form-row">
+      <input type="text" id="class_name" placeholder="Class Name (e.g. CSE-301)">
+      <input type="text" id="faculty_id" placeholder="Faculty ID">
+    </div>
+
+    <div class="video-wrap">
+      <video id="video" autoplay playsinline></video>
+      <canvas id="canvas" width="1280" height="720" style="display:none;"></canvas>
+    </div>
+
+    <button id="captureBtn">Capture Classroom Photo</button>
+    <div id="loader" class="loader" style="display:none;">Analyzing faces...</div>
+
+    <div id="results" class="results" style="display:none;">
+      <div class="result-col">
+        <h3>Present (<span id="presentCount">0</span>)</h3>
+        <ul id="presentList"></ul>
+      </div>
+      <div class="result-col">
+        <h3>Absent (<span id="absentCount">0</span>)</h3>
+        <ul id="absentList"></ul>
+      </div>
+    </div>
+    <p class="hint">If someone was missed, click their name in the Absent list to mark them Present (manual override).</p>
+  </div>
+
+  <script src="/static/script.js"></script>
+  <script>
+    startCamera();
+
+    document.getElementById('captureBtn').addEventListener('click', () => {
+      const className = document.getElementById('class_name').value.trim() || 'Unnamed Class';
+      const facultyId = document.getElementById('faculty_id').value.trim() || 'unknown';
+      const imageData = captureFrame();
+
+      showLoader(true);
+      document.getElementById('results').style.display = 'none';
+
+      fetch('/api/process_attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image: imageData,
+          class_name: className,
+          faculty_id: facultyId,
+          tolerance: 0.6
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        showLoader(false);
+        if (!data.success) {
+          alert(data.message);
+          return;
+        }
+        renderResults(data.present, data.absent);
+      })
+      .catch(err => {
+        showLoader(false);
+        alert('Error: ' + err);
+      });
+    });
+
+    function renderResults(present, absent) {
+      const presentList = document.getElementById('presentList');
+      const absentList = document.getElementById('absentList');
+      presentList.innerHTML = '';
+      absentList.innerHTML = '';
+
+      document.getElementById('presentCount').textContent = present.length;
+      document.getElementById('absentCount').textContent = absent.length;
+
+      present.forEach(s => {
+        const li = document.createElement('li');
+        li.textContent = `${s.name} (${s.student_id})`;
+        presentList.appendChild(li);
+      });
+
+      absent.forEach(s => {
+        const li = document.createElement('li');
+        li.textContent = `${s.name} (${s.student_id})`;
+        li.className = 'toggleable';
+        li.title = 'Click to mark Present (manual override)';
+        li.addEventListener('click', () => {
+          li.remove();
+          const newLi = document.createElement('li');
+          newLi.textContent = `${s.name} (${s.student_id}) [manual]`;
+          presentList.appendChild(newLi);
+          document.getElementById('presentCount').textContent =
+            presentList.children.length;
+          document.getElementById('absentCount').textContent =
+            absentList.children.length;
+        });
+        absentList.appendChild(li);
+      });
+
+      document.getElementById('results').style.display = 'flex';
+    }
+  </script>
+</body>
+</html>
